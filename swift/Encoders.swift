@@ -437,20 +437,35 @@ class TextInput: MLFeatureProvider {
     var inputIDs: [Int]
     var sequenceLength: Int
     var paddingID: Int
+    // WARNING: The mapping between input_0/input_1 and their purposes (token IDs vs attention mask)
+    // must be verified against the model's documentation or source.
+    // This is a critical configuration that affects model performance.
+    var tokenIDsInputName: String = "input_0"
+    var attentionMaskInputName: String = "input_1"
 
     /// Initializes a new instance for providing text input features.
     /// - Parameters:
     ///   - inputIDs: Array of integer IDs representing the encoded text.
     ///   - sequenceLength: The fixed length to which the input sequence should be padded.
     ///   - paddingID: The integer ID used for padding shorter sequences. Defaults to 0.
-    init(inputIDs: [Int], sequenceLength: Int, paddingID: Int = 0) {
+    ///   - tokenIDsInputName: The name of the input for token IDs. Defaults to "input_0".
+    ///   - attentionMaskInputName: The name of the input for attention mask. Defaults to "input_1".
+    init(
+        inputIDs: [Int],
+        sequenceLength: Int,
+        paddingID: Int = 0,
+        tokenIDsInputName: String = "input_0",
+        attentionMaskInputName: String = "input_1"
+    ) {
         self.inputIDs = inputIDs
         self.sequenceLength = sequenceLength
         self.paddingID = paddingID
+        self.tokenIDsInputName = tokenIDsInputName
+        self.attentionMaskInputName = attentionMaskInputName
     }
 
     var featureNames: Set<String> {
-        return Set(["input_ids", "attention_mask"])
+        return Set([tokenIDsInputName, attentionMaskInputName])
     }
 
     /// Returns the feature value for the specified feature name.
@@ -458,7 +473,7 @@ class TextInput: MLFeatureProvider {
     /// - Returns: An optional `MLFeatureValue` containing the data for the specified feature.
     func featureValue(for featureName: String) -> MLFeatureValue? {
         switch featureName {
-        case "input_ids", "attention_mask":
+        case tokenIDsInputName, attentionMaskInputName:
             return createFeatureValue(for: featureName)
         default:
             return nil
@@ -475,7 +490,8 @@ class TextInput: MLFeatureProvider {
             return nil
         }
 
-        if featureName == "input_ids" {
+        if featureName == tokenIDsInputName {
+            // Token IDs input
             for i in 0 ..< count {
                 multiArray[i] = NSNumber(value: inputIDs[i])
             }
@@ -483,7 +499,8 @@ class TextInput: MLFeatureProvider {
                 multiArray[i] = NSNumber(value: paddingID)
             }
         }
-        else if featureName == "attention_mask" {
+        else if featureName == attentionMaskInputName {
+            // Attention mask input
             for i in 0 ..< count {
                 multiArray[i] = NSNumber(value: 1)
             }
