@@ -259,7 +259,7 @@ class TextProcessor {
         self.tokenizer = try AutoTokenizer.from(tokenizerConfig: config, tokenizerData: tokenizerData)
 
         // Extract the model's input shape constraints.
-        guard let inputDescription = model.modelDescription.inputDescriptionsByName["input_ids"],
+        guard let inputDescription = model.modelDescription.inputDescriptionsByName["input_0"],
             let multiArrayConstraint = inputDescription.multiArrayConstraint
         else {
             throw EncoderError.invalidInput("Cannot obtain shape information from the model.")
